@@ -1,0 +1,50 @@
+# This file is responsible for configuring your application
+# and its dependencies with the aid of the Mix.Config module.
+use Mix.Config
+
+# This configuration is loaded before any dependency and is restricted
+# to this project. If another project depends on this project, this
+# file won't be loaded nor affect the parent project. For this reason,
+# if you want to provide default values for your application for
+# 3rd-party users, it should be done in your "mix.exs" file.
+
+# You can configure for your application as:
+#
+#     config :heisenautomod, key: :value
+#
+# And access this configuration in your application as:
+#
+#     Application.get_env(:heisenautomod, :key)
+#
+# Or configure a 3rd-party app:
+#
+#     config :logger, level: :info
+#
+
+# It is also possible to import configuration files, relative to this
+# directory. For example, you can emulate configuration per environment
+# by uncommenting the line below and defining dev.exs, test.exs and such.
+# Configuration from the imported file will override the ones defined
+# here (which is why it is important to import them last).
+#
+#     import_config "#{Mix.env}.exs"
+config :volapi,
+  nick: "your_username",
+  password: "your_password",
+  auto_login: true,
+  rooms: ["di3fdlsi5"] # This is a list of rooms that you want the bot to join. The default room is not really a room.
+
+config :heisenautomod,
+  # The following is a list of strings (words) that will trigger the file deleter.
+  banned_words: [".ts", ".docx"],
+  file_size_limit: 500_000_000 # This is in bytes.
+
+config :logger,
+  backends: [{LoggerFileBackend, :info_log}]
+
+config :logger, :info_log,
+  # Change info.log to some other filename if you want to change the filename for the log file. There needs to be a / at the start of the name.
+  path: Path.absname("./") <> "/info.log",
+  level: :info
+
+config :ssl, protocol_version: :"tlsv1.2"
