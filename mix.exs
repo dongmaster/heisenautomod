@@ -14,7 +14,8 @@ defmodule Heisenautomod.Mixfile do
   #
   # Type "mix help compile.app" for more information
   def application do
-    [applications: [:logger, :volapi]]
+    [applications: [:logger, :volapi],
+    mod: {Heisenautomod.Init, []}]
   end
 
   # Dependencies can be Hex packages:
@@ -28,7 +29,7 @@ defmodule Heisenautomod.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [
-      {:volapi, git: "https://github.com/dongmaster/volapi", tag: "v1.1.5"},
+      {:volapi, git: "https://github.com/dongmaster/volapi", tag: "v2.1.12"},
       {:logger_file_backend, "~> 0.0.9"}
     ]
   end

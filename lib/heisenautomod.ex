@@ -1,24 +1,48 @@
 defmodule Heisenautomod do
   use Volapi.Module, "automod"
   require Logger
-  #@file_size_limit 500_000_000 # This is about 500MB
-  @file_size_limit 5_000_000 # This is about 500MB
+  alias Volapi.Client.Sender
+  @tables [:banned_words, :chat_banned_strings, :file_special_rules]
 
   ## Enforcers
 
   def banned_word?(msg) do
-    text = Volapi.Util.get_text_from_message(msg) |> String.downcase
+    {res, triggers} = Heisenautomod.Util.banned_word(msg)
 
-    banned_words = get_banned_words
-
-    String.contains?(text, banned_words)
+    res
   end
 
   def file_size_limit?(%{file_size: file_size}) do
-    file_size > Application.get_env(:heisenautomod, :file_size_limit, 500_000_000)
+    file_size > Application.get_env(:heisenautomod, :file_size_limit, 525_000_000)
+  end
+
+  def chat_banned_string?(msg) do
+    {res, triggers} = Heisenautomod.Util.chat_banned_string(msg)
+
+    res
+  end
+
+  def file_special_rule?(msg) do
+    {res, triggers} = Heisenautomod.Util.file_special_rule(msg)
+
+    res
+  end
+
+  def not_staff(%{staff: staff}) do
+    not staff
   end
 
   ## Handlers
+
+  handle "chat" do
+    match "test", :hello
+
+    enforce :not_staff do
+      enforce :chat_banned_string? do
+        match_all :timeout_user
+      end
+    end
+  end
 
   handle "file" do
     enforce :banned_word? do
@@ -28,60 +52,113 @@ defmodule Heisenautomod do
     enforce :file_size_limit? do
       match_all :delete_file_size_limit
     end
+
+    # I have no idea what to call this function.
+    enforce :file_special_rule? do
+      match_all :delete_file_special_rule
+    end
+  end
+
+  handle "file_delete" do
+    match_all :file_deleted
+  end
+
+  handle "connect" do
+    match_all :connected
   end
 
   ## Matchers
 
+  defh connected do
+    Volapi.Util.login(message.room)
+  end
+
+  defh hello do
+    reply "hello!"
+  end
+
+  defh file_deleted(%{room: room, file_id: file_id, file_name: file_name, file_size: file_size, metadata: %{user: user}}) do
+    {_, triggers} = Heisenautomod.Util.banned_word(message)
+
+    all_triggers = triggers
+
+    extra_s = if Enum.count(all_triggers) > 1, do: "s", else: ""
+    possible_trigger_words = if Enum.count(all_triggers) > 0, do: "possible trigger word#{extra_s} for deletion: #{Enum.join(all_triggers, ", ")}", else: ""
+
+    limit = Application.get_env(:heisenautomod, :file_size_limit)
+    diff = limit - file_size
+
+    FileLogger.log("Deleted the following file: \"#{file_name}\" uploaded by: \"#{user}\" file size: \"#{file_size}\" (limit: #{limit} | difference: #{diff}) possible trigger word#{extra_s} for deletion: #{Enum.join(all_triggers, ", ")} #{possible_trigger_words}")
+  end
+
+  defh file_deleted do
+    IO.inspect message
+  end
+
   defh delete_file_banned_word(%{room: room, file_id: file_id, file_name: file_name, metadata: %{user: user}}) do
-    Logger.info("Deleting the following file: \"#{file_name}\" uploaded by: \"#{user}\" because of a banned word.")
-    Volapi.Client.Sender.delete_file(file_id, room)
+    FileLogger.log("Trying to delete the following file: \"#{file_name}\" uploaded by: \"#{user}\" because of a banned word.")
+    Sender.delete_file(file_id, room)
     Process.sleep(60)
   end
 
   defh delete_file_size_limit(%{room: room, file_id: file_id, file_name: file_name, file_size: file_size, metadata: %{user: user}}) do
-    Logger.info("Deleting the following file: \"#{file_name}\" uploaded by: \"#{user}\" because of the file size (#{file_size} bytes).")
-    Volapi.Client.Sender.delete_file(file_id, room)
+    FileLogger.log("Trying to delete the following file: \"#{file_name}\" uploaded by: \"#{user}\" because of the file size (#{file_size} bytes).")
+    Sender.delete_file(file_id, room)
     Process.sleep(60)
+  end
+
+  defh delete_file_special_rule(%{room: room, file_id: file_id, file_name: file_name, metadata: %{user: user}}) do
+    FileLogger.log("Trying to delete the following file: \"#{file_name}\" uploaded by: \"#{user}\" because it didn't have a specific word in it.")
+    Sender.delete_file(file_id, room)
+    Process.sleep(60)
+  end
+
+  defh timeout_user(%{nick: nick, message: msg, id: id, room: room, user: logged_in, admin: admin, donator: donator, staff: staff}) do
+    {_, triggers} = Heisenautomod.Util.chat_banned_string(message)
+
+    extra_s = if Enum.count(triggers) > 1, do: "s", else: ""
+
+    FileLogger.log("Timing out \"#{nick}\" (Logged in: #{logged_in} | Donator: #{donator}) because of the following message: \"#{msg}\" The following word#{extra_s} triggered the timeout: #{Enum.join(triggers, ", ")}")
+
+    Sender.timeout_chat(id, nick, room)
   end
 
   ## Functions
 
   def module_init do
     Process.sleep(1000)
-    if :ets.info(:banned_words) == :undefined do
-      :ets.new(:banned_words, [:public, :named_table])
+    Enum.each(@tables, fn(table) ->
+      if :ets.info(table) == :undefined do
+        :ets.new(table, [:public, :named_table])
 
-      banned_words = Application.get_env(:heisenautomod, :banned_words, [])
+        banned_words = Application.get_env(:heisenautomod, table, [])
 
-      :ets.insert(:banned_words, {"banned_words", banned_words})
+        :ets.insert(table, {Atom.to_string(table), banned_words})
+      end
+    end)
 
-      :timer.apply_interval(60000 * 5, __MODULE__, :check_files, [])
-    end
+    :timer.apply_interval(30000, __MODULE__, :check_files, [])
   end
 
   def check_files do
     Enum.each(Application.get_env(:volapi, :rooms, []), fn(room) ->
       files = Volapi.Server.Client.get_files(room)
 
+      funcs = [
+        {Heisenautomod.Util, :banned_word},
+        {Heisenautomod.Util, :file_special_rule}
+      ]
+
       Enum.each(files, fn(file) ->
-        text = Volapi.Util.get_text_from_message(file) |> String.downcase
+        Enum.each(funcs, fn({module, func}) ->
+          {res, triggers} = apply(module, func, [file])
 
-        banned_words = get_banned_words
-
-        if String.contains?(text, banned_words) do
-          Process.sleep(100)
-          Volapi.Client.Sender.delete_file(file.file_id, room)
-        end
+          if res do
+            Process.sleep(100)
+            Volapi.Client.Sender.delete_file(file.file_id, room)
+          end
+        end)
       end)
     end)
-  end
-
-  def get_banned_words do
-    case :ets.lookup(:banned_words, "banned_words") do
-      [{_, banned_words}] ->
-        banned_words
-      _ ->
-        []
-    end
   end
 end

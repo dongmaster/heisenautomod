@@ -21,3 +21,5 @@ erl_crash.dump
 
 # Don't want to publish the info.log file either.
 /info.log
+
+/logs/
