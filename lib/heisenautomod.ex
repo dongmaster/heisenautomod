@@ -77,12 +77,12 @@ defmodule Heisenautomod do
     all_triggers = triggers
 
     extra_s = if Enum.count(all_triggers) > 1, do: "s", else: ""
-    possible_trigger_words = if Enum.count(all_triggers) > 0, do: "possible trigger word#{extra_s} for deletion: #{Enum.join(all_triggers, ", ")}", else: ""
+    possible_trigger_words = if Enum.count(all_triggers) > 0, do: " possible trigger word#{extra_s} for deletion: #{Enum.join(all_triggers, ", ")}", else: ""
 
     limit = Application.get_env(:heisenautomod, :file_size_limit)
     diff = limit - file_size
 
-    FileLogger.log("Deleted the following file: \"#{file_name}\" uploaded by: \"#{user}\" file size: \"#{file_size}\" (limit: #{limit} | difference: #{diff}) #{possible_trigger_words}")
+    FileLogger.log("Deleted the following file: \"#{file_name}\" uploaded by: \"#{user}\" file size: \"#{file_size}\" (limit: #{limit} | difference: #{diff})#{possible_trigger_words}")
   end
 
   defh file_deleted do
@@ -90,19 +90,16 @@ defmodule Heisenautomod do
   end
 
   defh delete_file_banned_word(%{room: room, file_id: file_id, file_name: file_name, metadata: %{user: user}}) do
-    FileLogger.log("Trying to delete the following file: \"#{file_name}\" uploaded by: \"#{user}\" because of a banned word.")
     Sender.delete_file(file_id, room)
     Process.sleep(60)
   end
 
   defh delete_file_size_limit(%{room: room, file_id: file_id, file_name: file_name, file_size: file_size, metadata: %{user: user}}) do
-    FileLogger.log("Trying to delete the following file: \"#{file_name}\" uploaded by: \"#{user}\" because of the file size (#{file_size} bytes).")
     Sender.delete_file(file_id, room)
     Process.sleep(60)
   end
 
   defh delete_file_special_rule(%{room: room, file_id: file_id, file_name: file_name, metadata: %{user: user}}) do
-    FileLogger.log("Trying to delete the following file: \"#{file_name}\" uploaded by: \"#{user}\" because it didn't have a specific word in it.")
     Sender.delete_file(file_id, room)
     Process.sleep(60)
   end
@@ -140,7 +137,7 @@ defmodule Heisenautomod do
 
       funcs = [
         {Heisenautomod.Util, :banned_word},
-        {Heisenautomod.Util, :file_special_rule}
+        {Heisenautomod.Util, :file_special_rule},
       ]
 
       Enum.each(files, fn(file) ->
