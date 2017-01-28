@@ -35,8 +35,6 @@ defmodule Heisenautomod do
   ## Handlers
 
   handle "chat" do
-    match "test", :hello
-
     enforce :not_staff do
       enforce :chat_banned_string? do
         match_all :timeout_user
@@ -73,10 +71,6 @@ defmodule Heisenautomod do
     Volapi.Util.login(message.room)
   end
 
-  defh hello do
-    reply "hello!"
-  end
-
   defh file_deleted(%{room: room, file_id: file_id, file_name: file_name, file_size: file_size, metadata: %{user: user}}) do
     {_, triggers} = Heisenautomod.Util.banned_word(message)
 
@@ -88,7 +82,7 @@ defmodule Heisenautomod do
     limit = Application.get_env(:heisenautomod, :file_size_limit)
     diff = limit - file_size
 
-    FileLogger.log("Deleted the following file: \"#{file_name}\" uploaded by: \"#{user}\" file size: \"#{file_size}\" (limit: #{limit} | difference: #{diff}) possible trigger word#{extra_s} for deletion: #{Enum.join(all_triggers, ", ")} #{possible_trigger_words}")
+    FileLogger.log("Deleted the following file: \"#{file_name}\" uploaded by: \"#{user}\" file size: \"#{file_size}\" (limit: #{limit} | difference: #{diff}) #{possible_trigger_words}")
   end
 
   defh file_deleted do
