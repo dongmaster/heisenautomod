@@ -5,7 +5,7 @@ defmodule Heisenautomod.Util do
     get_match(text, :banned_words)
   end
 
-  def chat_banned_string(%{message: message}) do
+  def chat_banned_string(%{message_alt: message}) do
     get_match(message, :chat_banned_strings)
   end
 
