@@ -7,5 +7,5 @@
   "mimerl": {:hex, :mimerl, "1.0.2", "993f9b0e084083405ed8252b99460c4f0563e41729ab42d9074fd5e52439be88", [:rebar3], []},
   "poison": {:hex, :poison, "3.1.0", "d9eb636610e096f86f25d9a46f35a9facac35609a7591b3be3326e99a0484665", [:mix], []},
   "ssl_verify_fun": {:hex, :ssl_verify_fun, "1.1.1", "28a4d65b7f59893bc2c7de786dec1e1555bd742d336043fe644ae956c3497fbe", [:make, :rebar], []},
-  "volapi": {:git, "https://github.com/dongmaster/volapi", "84551c8370d1641ecb6caca89a5fd73bda4aa577", [tag: "v2.1.12"]},
+  "volapi": {:git, "https://github.com/dongmaster/volapi", "54c140fdb42405f91eb1f4d1a8013c358ae9bee8", [tag: "v2.1.13"]},
   "websocket_client": {:git, "https://github.com/sanmiguel/websocket_client", "bfddfeebc776379acf1d81d7691e98d6aa9d7e6f", []}}
