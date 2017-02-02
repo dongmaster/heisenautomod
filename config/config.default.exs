@@ -53,6 +53,12 @@ config :heisenautomod,
   file_special_rules: [
     {["request", "reqs"], [".jpg", ".jpeg"]},
     {["cool"], [".png"]}
-]
+  ],
+  # This is a reverse version of the above option.
+  # It works like this:
+  # If a string from the second list is found in a filename, AND if any of the strings in the first list is also in the filename, the file is deleted.
+  reverse_file_special_rules: [
+    {["request"], [".mp4"]}
+  ]
 
 config :ssl, protocol_version: :"tlsv1.2"

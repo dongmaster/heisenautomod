@@ -10,15 +10,30 @@ defmodule Heisenautomod.Util do
   end
 
   def file_special_rule(msg) do
+    file_special_rule(msg, :file_special_rules, false)
+  end
+
+  def reverse_file_special_rule(msg) do
+    file_special_rule(msg, :reverse_file_special_rules, true)
+  end
+
+  def file_special_rule(msg, table, reverse) do
     text = Volapi.Util.get_text_from_message(msg) |> String.downcase
 
-    rules = get_table_contents(:file_special_rules)
+    rules = get_table_contents(table)
 
     res =
         for {words, filetypes} <- rules do
           if String.contains?(text, filetypes) do
-            if not String.contains?(text, words) do
-              words
+            case reverse do
+              true ->
+                if String.contains?(text, words) do
+                  words
+                end
+              false ->
+                if not String.contains?(text, words) do
+                  words
+                end
             end
           end
         end |> Enum.reject(&(&1 == nil)) |> List.flatten

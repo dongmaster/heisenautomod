@@ -2,7 +2,7 @@ defmodule Heisenautomod do
   use Volapi.Module, "automod"
   require Logger
   alias Volapi.Client.Sender
-  @tables [:banned_words, :chat_banned_strings, :file_special_rules]
+  @tables [:banned_words, :chat_banned_strings, :file_special_rules, :reverse_file_special_rules]
 
   ## Enforcers
 
@@ -28,8 +28,18 @@ defmodule Heisenautomod do
     res
   end
 
+  def reverse_file_special_rule?(msg) do
+    {res, triggers} = Heisenautomod.Util.reverse_file_special_rule(msg)
+
+    res
+  end
+
   def not_staff(%{staff: staff}) do
     not staff
+  end
+
+  def logged_in?(%{logged_in: state}) do
+    state
   end
 
   ## Handlers
@@ -55,6 +65,10 @@ defmodule Heisenautomod do
     enforce :file_special_rule? do
       match_all :delete_file_special_rule
     end
+
+    enforce :reverse_file_special_rule? do
+      match_all :delete_file_special_rule
+    end
   end
 
   handle "file_delete" do
@@ -65,7 +79,17 @@ defmodule Heisenautomod do
     match_all :connected
   end
 
+  handle "logged_in" do
+    enforce :logged_in? do
+      match_all :logged_in
+    end
+  end
+
   ## Matchers
+
+  defh logged_in do
+    reply_admin "Logged in!"
+  end
 
   defh connected do
     Volapi.Util.login(message.room)
@@ -138,6 +162,7 @@ defmodule Heisenautomod do
       funcs = [
         {Heisenautomod.Util, :banned_word},
         {Heisenautomod.Util, :file_special_rule},
+        {Heisenautomod.Util, :reverse_file_special_rule}
       ]
 
       Enum.each(files, fn(file) ->
