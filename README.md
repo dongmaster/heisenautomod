@@ -29,6 +29,9 @@ Execute this command in the heisenautomod directory and the bot will start up.
 $ iex -S mix
 ```
 
+## Usage
+
+If you'd like to know how to use the rules system, please take a look at RULES.md
 
 ## Updating
 

@@ -2,7 +2,7 @@ defmodule Heisenautomod do
   use Volapi.Module, "automod"
   require Logger
   alias Volapi.Client.Sender
-  @tables [:banned_words, :chat_banned_strings, :file_special_rules, :reverse_file_special_rules]
+  @tables [:banned_words, :chat_banned_strings, :file_special_rules, :reverse_file_special_rules, :deleted_self]
 
   ## Enforcers
 
@@ -42,6 +42,10 @@ defmodule Heisenautomod do
     state
   end
 
+  def deleted_self?(%{file_id: file_id}) do
+    Heisenautomod.Util.get_table_contents(:deleted_self, file_id) != []
+  end
+
   ## Handlers
 
   handle "chat" do
@@ -72,11 +76,9 @@ defmodule Heisenautomod do
   end
 
   handle "file_delete" do
-    match_all :file_deleted
-  end
-
-  handle "connect" do
-    match_all :connected
+    enforce :deleted_self? do
+      match_all :file_deleted
+    end
   end
 
   handle "logged_in" do
@@ -87,15 +89,17 @@ defmodule Heisenautomod do
 
   ## Matchers
 
+  defh hello do
+    reply "hello!"
+  end
+
   defh logged_in do
     reply_admin "Logged in!"
   end
 
-  defh connected do
-    Volapi.Util.login(message.room)
-  end
+  defh file_deleted(%{room: room, file_id: file_id, file_name: file_name, file_size: file_size, nick: user}) do
+    :ets.delete(:deleted_self, file_id)
 
-  defh file_deleted(%{room: room, file_id: file_id, file_name: file_name, file_size: file_size, metadata: %{user: user}}) do
     {_, triggers} = Heisenautomod.Util.banned_word(message)
 
     all_triggers = triggers
@@ -113,17 +117,20 @@ defmodule Heisenautomod do
     IO.inspect message
   end
 
-  defh delete_file_banned_word(%{room: room, file_id: file_id, file_name: file_name, metadata: %{user: user}}) do
+  defh delete_file_banned_word(%{room: room, file_id: file_id, file_name: file_name, nick: user}) do
+    :ets.insert(:deleted_self, {file_id, file_id})
     Sender.delete_file(file_id, room)
     Process.sleep(60)
   end
 
-  defh delete_file_size_limit(%{room: room, file_id: file_id, file_name: file_name, file_size: file_size, metadata: %{user: user}}) do
+  defh delete_file_size_limit(%{room: room, file_id: file_id, file_name: file_name, file_size: file_size, nick: user}) do
+    :ets.insert(:deleted_self, {file_id, file_id})
     Sender.delete_file(file_id, room)
     Process.sleep(60)
   end
 
-  defh delete_file_special_rule(%{room: room, file_id: file_id, file_name: file_name, metadata: %{user: user}}) do
+  defh delete_file_special_rule(%{room: room, file_id: file_id, file_name: file_name, nick: user}) do
+    :ets.insert(:deleted_self, {file_id, file_id})
     Sender.delete_file(file_id, room)
     Process.sleep(60)
   end
@@ -144,7 +151,7 @@ defmodule Heisenautomod do
     Process.sleep(1000)
     Enum.each(@tables, fn(table) ->
       if :ets.info(table) == :undefined do
-        :ets.new(table, [:public, :named_table])
+        :ets.new(table, [:public, :named_table, {:write_concurrency, true}, {:read_concurrency, true}])
 
         banned_words = Application.get_env(:heisenautomod, table, [])
 

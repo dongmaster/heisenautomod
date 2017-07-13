@@ -38,6 +38,8 @@ defmodule FileLogger do
 
   def get_new_log_filename() do
     {{year, month, day}, _} = :calendar.local_time
+    month = if month <= 9, do: "0#{month}", else: month
+    day = if day <= 9, do: "0#{day}", else: day
 
     "#{@base_log_directory}#{year}-#{month}-#{day}.log"
   end

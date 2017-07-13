@@ -68,4 +68,13 @@ defmodule Heisenautomod.Util do
         []
     end
   end
+
+  def get_table_contents(table, row) do
+    case :ets.lookup(table, row) do
+      [{_, contents}] ->
+        contents
+      _ ->
+        []
+    end
+  end
 end
