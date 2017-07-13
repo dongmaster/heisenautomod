@@ -76,9 +76,9 @@ defmodule Heisenautomod do
   end
 
   handle "file_delete" do
-    enforce :deleted_self? do
-      match_all :file_deleted
-    end
+    #enforce :deleted_self? do
+    match_all :file_deleted
+    #end
   end
 
   handle "logged_in" do
@@ -89,16 +89,12 @@ defmodule Heisenautomod do
 
   ## Matchers
 
-  defh hello do
-    reply "hello!"
-  end
-
   defh logged_in do
     reply_admin "Logged in!"
   end
 
   defh file_deleted(%{room: room, file_id: file_id, file_name: file_name, file_size: file_size, nick: user}) do
-    :ets.delete(:deleted_self, file_id)
+    #:ets.delete(:deleted_self, file_id)
 
     {_, triggers} = Heisenautomod.Util.banned_word(message)
 
@@ -118,19 +114,19 @@ defmodule Heisenautomod do
   end
 
   defh delete_file_banned_word(%{room: room, file_id: file_id, file_name: file_name, nick: user}) do
-    :ets.insert(:deleted_self, {file_id, file_id})
+    #:ets.insert(:deleted_self, {file_id, file_id})
     Sender.delete_file(file_id, room)
     Process.sleep(60)
   end
 
   defh delete_file_size_limit(%{room: room, file_id: file_id, file_name: file_name, file_size: file_size, nick: user}) do
-    :ets.insert(:deleted_self, {file_id, file_id})
+    #:ets.insert(:deleted_self, {file_id, file_id})
     Sender.delete_file(file_id, room)
     Process.sleep(60)
   end
 
   defh delete_file_special_rule(%{room: room, file_id: file_id, file_name: file_name, nick: user}) do
-    :ets.insert(:deleted_self, {file_id, file_id})
+    #:ets.insert(:deleted_self, {file_id, file_id})
     Sender.delete_file(file_id, room)
     Process.sleep(60)
   end

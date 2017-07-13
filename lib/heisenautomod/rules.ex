@@ -104,7 +104,8 @@ defmodule Heisenautomod.Rules do
 
   def check_message(trig_list, message, key) do
     Enum.any?(trig_list, fn(trig) ->
-      String.contains?(Map.get(message, key), trig)
+      #String.contains?(Map.get(message, key), trig)
+      Map.get(message, key) == trig
     end)
   end
 
