@@ -1,4 +1,6 @@
 defmodule Heisenautomod.Rules do
+  @default_length :medium
+
   defmacro __using__(module_name) do
     quote bind_quoted: [module_name: module_name] do
       use Volapi.Module, module_name
@@ -67,39 +69,75 @@ defmodule Heisenautomod.Rules do
   #   end
   # end
 
-  defmacro timeout(_key, [], length, _func_name) do
+  # Supplies length
+  # Supplies function
+  defmacro timeout(key, trig, length, extra_function, func_name) when is_list(trig) and is_integer(length) do
+    timeout_string(key, trig, length, extra_function, func_name)
   end
 
-  defmacro timeout(key, trig, length, func_name) when is_list(trig) and is_binary(hd(trig)) do
-    timeout_string(key, trig, length, func_name)
+  # Supplies length
+  # Supplies function
+  defmacro timeout(key, trig, length, extra_function, func_name) when is_binary(trig) and is_integer(length) do
+    timeout_string(key, [trig], length, extra_function, func_name)
   end
 
-  defmacro timeout(key, trig, length, func_name) when is_binary(trig) do
-    timeout_string(key, [trig], length, func_name)
+  # Supplies length
+  defmacro timeout(key, trig, length, func_name) when is_list(trig) and is_integer(length) do
+    timeout_string(key, trig, length, nil, func_name)
   end
 
-  defmacro timeout(key, trig, func_name) when is_list(trig) and is_binary(hd(trig)) do
-    timeout_string(key, trig, :medium, func_name)
+  # Supplies length
+  defmacro timeout(key, trig, length, func_name) when is_binary(trig) and is_integer(length) do
+    timeout_string(key, [trig], length, nil, func_name)
   end
 
+  # Does not supply length
+  # Supplies function
+  defmacro timeout(key, trig, extra_function, func_name) when is_binary(trig) do
+    timeout_string(key, [trig], @default_length, extra_function, func_name)
+  end
+
+  # Does not supply length
+  # Supplies function
+  defmacro timeout(key, trig, extra_function, func_name) when is_list(trig) do
+    timeout_string(key, trig, @default_length, extra_function, func_name)
+  end
+
+  # Does not supply length
+  defmacro timeout(key, trig, func_name) when is_list(trig) do
+    timeout_string(key, trig, @default_length, nil, func_name)
+  end
+
+  # Does not supply length
   defmacro timeout(key, trig, func_name) when is_binary(trig) do
-    timeout_string(key, [trig], :medium, func_name)
+    timeout_string(key, [trig], @default_length, nil, func_name)
   end
 
-  def timeout_string(key, trig_list, length, func_name) do
+  def timeout_string(key, trig_list, length, extra_function, func_name) do
     quote do
       defh unquote(func_name)(%{nick: nick, id: id, room: room}) do
         if Heisenautomod.Rules.check_message(unquote(trig_list), var!(message), unquote(key)) do
           Volapi.Client.Sender.timeout_chat(id, nick, unquote(length), room)
+
+          execute_function(unquote(extra_function))
         end
       end
 
       defh unquote(func_name)(%{nick: nick, file_id: id, room: room}) do
         if Heisenautomod.Rules.check_message(unquote(trig_list), var!(message), unquote(key)) do
           Volapi.Client.Sender.timeout_file(id, nick, unquote(length), room)
+
+          execute_function(unquote(extra_function))
         end
       end
     end
+  end
+
+  def execute_function(func) when is_function(func) do
+    func.()
+  end
+
+  def execute_function(_func) do
   end
 
   def check_message(trig_list, message, key) do
@@ -122,32 +160,60 @@ defmodule Heisenautomod.Rules do
   # end
 
   defmacro timeout_regex(key, trig, func_name) when is_list(trig) do
-    timeout_regex_func(key, trig, :medium, func_name)
+    timeout_regex_func(key, trig, @default_length, nil, func_name)
   end
 
   defmacro timeout_regex(key, trig, func_name) do
-    timeout_regex_func(key, [trig], :medium, func_name)
+    timeout_regex_func(key, [trig], @default_length, nil, func_name)
   end
 
-  defmacro timeout_regex(key, trig, length, func_name) when is_list(trig) do
-    timeout_regex_func(key, trig, length, func_name)
+  defmacro timeout_regex(key, trig, length, func_name) when is_list(trig) and is_integer(length) do
+    timeout_regex_func(key, trig, length, nil, func_name)
   end
 
-  defmacro timeout_regex(key, trig, length, func_name) do
-    timeout_regex_func(key, [trig], length, func_name)
+  defmacro timeout_regex(key, trig, length, func_name) when is_integer(length) do
+    timeout_regex_func(key, [trig], length, nil, func_name)
   end
 
-  def timeout_regex_func(key, trig_list, length, func_name) do
+  # Does not supply length
+  # Supplies function
+  defmacro timeout_regex(key, trig, extra_function, func_name) when is_list(trig)  do
+    timeout_regex_func(key, trig, @default_length, extra_function, func_name)
+  end
+
+  # Does not supply length
+  # Supplies function
+  defmacro timeout_regex(key, trig, extra_function, func_name) do
+    timeout_regex_func(key, [trig], @default_length, extra_function, func_name)
+  end
+
+  # Supplies length
+  # Supplies function
+  defmacro timeout_regex(key, trig, length, extra_function, func_name) when is_list(trig) and is_integer(length)  do
+    timeout_regex_func(key, trig, length, extra_function, func_name)
+  end
+
+  # Supplies length
+  # Supplies function
+  defmacro timeout_regex(key, trig, length, extra_function, func_name) when is_integer(length)  do
+    timeout_regex_func(key, [trig], length, extra_function, func_name)
+  end
+
+  def timeout_regex_func(key, trig_list, length, extra_function, func_name) do
     quote do
       defh unquote(func_name)(%{nick: nick, id: id, room: room}) do
         if Heisenautomod.Rules.check_message_regex(unquote(trig_list), var!(message), unquote(key)) do
           Volapi.Client.Sender.timeout_chat(id, nick, unquote(length), room)
+
+          execute_function(unquote(extra_function))
         end
       end
 
       defh unquote(func_name)(%{nick: nick, file_id: id, room: room}) do
         if Heisenautomod.Rules.check_message_regex(unquote(trig_list), var!(message), unquote(key)) do
           Volapi.Client.Sender.timeout_file(id, nick, unquote(length), room)
+
+          execute_function(unquote(extra_function))
         end
       end
     end
@@ -160,72 +226,112 @@ defmodule Heisenautomod.Rules do
   end
 
   defmacro ban(key, trig, options, func_name) when is_list(trig) do
-    ban_user(key, trig, options, func_name)
+    ban_user(key, trig, options, nil, func_name)
   end
 
   defmacro ban(key, trig, options, func_name) do
-    ban_user(key, [trig], options, func_name)
+    ban_user(key, [trig], options, nil, func_name)
   end
 
-  def ban_user(key, trig_list, options, func_name) do
+  defmacro ban(key, trig, options, extra_function, func_name) when is_list(trig)  do
+    ban_user(key, trig, options, extra_function, func_name)
+  end
+
+  defmacro ban(key, trig, options, extra_function, func_name) do
+    ban_user(key, [trig], options, extra_function, func_name)
+  end
+
+  def ban_user(key, trig_list, options, extra_function, func_name) do
     quote do
       defh unquote(func_name)(%{ip: ip, room: room}) do
         if Heisenautomod.Rules.check_message(unquote(trig_list), var!(message), unquote(key)) do
           Volapi.Client.Sender.ban_user(ip, unquote(options), room)
+
+          execute_function(unquote(extra_function))
         end
       end
     end
   end
 
   defmacro ban_regex(key, trig, options, func_name) when is_list(trig) do
-    ban_user_regex(key, trig, options, func_name)
+    ban_user_regex(key, trig, options, nil, func_name)
   end
 
   defmacro ban_regex(key, trig, options, func_name) do
-    ban_user_regex(key, trig, options, func_name)
+    ban_user_regex(key, trig, options, nil, func_name)
   end
 
-  def ban_user_regex(key, trig_list, options, func_name) do
+  defmacro ban_regex(key, trig, options, extra_function, func_name) when is_list(trig) do
+    ban_user_regex(key, trig, options, extra_function, func_name)
+  end
+
+  defmacro ban_regex(key, trig, options, extra_function, func_name) do
+    ban_user_regex(key, [trig], options, extra_function, func_name)
+  end
+
+  def ban_user_regex(key, trig_list, options, extra_function, func_name) do
     quote do
       defh unquote(func_name)(%{ip: ip, room: room}) do
         if Heisenautomod.Rules.check_message_regex(unquote(trig_list), var!(message), unquote(key)) do
           Volapi.Client.Sender.ban_user(ip, unquote(options), room)
+
+          execute_function(unquote(extra_function))
         end
       end
     end
   end
 
   defmacro delete(key, trig, func_name) when is_list(trig) do
-    delete_file(key, trig, func_name)
+    delete_file(key, trig, nil, func_name)
   end
 
   defmacro delete(key, trig, func_name) do
-    delete_file(key, [trig], func_name)
+    delete_file(key, [trig], nil, func_name)
   end
 
-  def delete_file(key, trig_list, func_name) do
+  defmacro delete(key, trig, extra_function, func_name) when is_list(trig)  do
+    delete_file(key, trig, extra_function, func_name)
+  end
+
+  defmacro delete(key, trig, extra_function, func_name) do
+    delete_file(key, [trig], extra_function, func_name)
+  end
+
+  def delete_file(key, trig_list, extra_function, func_name) do
     quote do
       defh unquote(func_name)(%{file_id: file_id, room: room}) do
         if Heisenautomod.Rules.check_message(unquote(trig_list), var!(message), unquote(key)) do
           Volapi.Client.Sender.delete_file(file_id, room)
+
+          execute_function(unquote(extra_function))
         end
       end
     end
   end
 
   defmacro delete_regex(key, trig, func_name) when is_list(trig) do
-    delete_file_regex(key, trig, func_name)
+    delete_file_regex(key, trig, nil, func_name)
   end
 
   defmacro delete_regex(key, trig, func_name) do
-    delete_file_regex(key, [trig], func_name)
+    delete_file_regex(key, [trig], nil, func_name)
   end
 
-  def delete_file_regex(key, trig_list, func_name) do
+  defmacro delete_regex(key, trig, extra_function, func_name) when is_list(trig) do
+    delete_file_regex(key, trig, extra_function, func_name)
+  end
+
+  defmacro delete_regex(key, trig, extra_function, func_name) do
+    delete_file_regex(key, [trig], extra_function, func_name)
+  end
+
+  def delete_file_regex(key, trig_list, extra_function, func_name) do
     quote do
       defh unquote(func_name)(%{file_id: file_id, room: room}) do
         if Heisenautomod.Rules.check_message_regex(unquote(trig_list), var!(message), unquote(key)) do
           Volapi.Client.Sender.delete_file(file_id, room)
+
+          execute_function(unquote(extra_function))
         end
       end
     end
