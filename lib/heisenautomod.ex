@@ -90,7 +90,8 @@ defmodule Heisenautomod do
   ## Matchers
 
   defh logged_in do
-    reply_admin "Logged in!"
+    Process.sleep(1000)
+    reply "Logged in!"
   end
 
   defh file_deleted(%{room: room, file_id: file_id, file_name: file_name, file_size: file_size, nick: user}) do
@@ -106,7 +107,10 @@ defmodule Heisenautomod do
     limit = Application.get_env(:heisenautomod, :file_size_limit)
     diff = limit - file_size
 
-    FileLogger.log("Deleted the following file: \"#{file_name}\" uploaded by: \"#{user}\" file size: \"#{file_size}\" (limit: #{limit} | difference: #{diff})#{possible_trigger_words}")
+    log_message = "Deleted the following file: \"#{file_name}\" uploaded by: \"#{user}\" file size: \"#{file_size}\" (limit: #{limit} | difference: #{diff})#{possible_trigger_words}"
+
+    FileLogger.log(log_message)
+    IO.puts(IO.ANSI.light_yellow() <> log_message)
   end
 
   defh file_deleted do
@@ -136,7 +140,10 @@ defmodule Heisenautomod do
 
     extra_s = if Enum.count(triggers) > 1, do: "s", else: ""
 
-    FileLogger.log("Timing out \"#{nick}\" (Logged in: #{logged_in} | Donator: #{donator}) because of the following message: \"#{msg}\" The following word#{extra_s} triggered the timeout: #{Enum.join(triggers, ", ")}")
+    log_message = "Timing out \"#{nick}\" (Logged in: #{logged_in} | Donator: #{donator}) because of the following message: \"#{msg}\" The following word#{extra_s} triggered the timeout: #{Enum.join(triggers, ", ")}"
+
+    FileLogger.log(log_message)
+    IO.puts(IO.ANSI.light_yellow <> log_message)
 
     Sender.timeout_chat(id, nick, room)
   end
