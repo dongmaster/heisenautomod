@@ -29,7 +29,7 @@ defmodule Heisenautomod.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [
-      {:volapi, git: "https://github.com/dongmaster/volapi", tag: "v3.2.32"},
+      {:volapi, git: "https://github.com/dongmaster/volapi", tag: "v3.2.36"},
     ]
   end
 end

@@ -71,23 +71,23 @@ defmodule Heisenautomod.Rules do
 
   # Supplies length
   # Supplies function
-  defmacro timeout(key, trig, length, extra_function, func_name) when is_list(trig) and is_integer(length) do
+  defmacro timeout(key, trig, length, extra_function, func_name) when is_list(trig) and is_integer(length) or is_atom(length) do
     timeout_string(key, trig, length, extra_function, func_name)
   end
 
   # Supplies length
   # Supplies function
-  defmacro timeout(key, trig, length, extra_function, func_name) when is_binary(trig) and is_integer(length) do
+  defmacro timeout(key, trig, length, extra_function, func_name) when is_binary(trig) and is_integer(length) or is_atom(length) do
     timeout_string(key, [trig], length, extra_function, func_name)
   end
 
   # Supplies length
-  defmacro timeout(key, trig, length, func_name) when is_list(trig) and is_integer(length) do
+  defmacro timeout(key, trig, length, func_name) when is_list(trig) and is_integer(length) or is_atom(length) do
     timeout_string(key, trig, length, nil, func_name)
   end
 
   # Supplies length
-  defmacro timeout(key, trig, length, func_name) when is_binary(trig) and is_integer(length) do
+  defmacro timeout(key, trig, length, func_name) when is_binary(trig) and is_integer(length) or is_atom(length) do
     timeout_string(key, [trig], length, nil, func_name)
   end
 
@@ -119,7 +119,7 @@ defmodule Heisenautomod.Rules do
         if Heisenautomod.Rules.check_message(unquote(trig_list), var!(message), unquote(key)) do
           Volapi.Client.Sender.timeout_chat(id, nick, unquote(length), room)
 
-          execute_function(unquote(extra_function))
+          execute_function(unquote(extra_function), var!(message))
         end
       end
 
@@ -127,17 +127,18 @@ defmodule Heisenautomod.Rules do
         if Heisenautomod.Rules.check_message(unquote(trig_list), var!(message), unquote(key)) do
           Volapi.Client.Sender.timeout_file(id, nick, unquote(length), room)
 
-          execute_function(unquote(extra_function))
+          execute_function(unquote(extra_function), var!(message))
         end
       end
     end
   end
 
-  def execute_function(func) when is_function(func) do
-    func.()
+  def execute_function(func, message) when is_function(func) do
+    Process.sleep(20)
+    func.(message)
   end
 
-  def execute_function(_func) do
+  def execute_function(_func, _message) do
   end
 
   def check_message(trig_list, message, key) do
@@ -167,11 +168,11 @@ defmodule Heisenautomod.Rules do
     timeout_regex_func(key, [trig], @default_length, nil, func_name)
   end
 
-  defmacro timeout_regex(key, trig, length, func_name) when is_list(trig) and is_integer(length) do
+  defmacro timeout_regex(key, trig, length, func_name) when is_list(trig) and is_integer(length) or is_atom(length) do
     timeout_regex_func(key, trig, length, nil, func_name)
   end
 
-  defmacro timeout_regex(key, trig, length, func_name) when is_integer(length) do
+  defmacro timeout_regex(key, trig, length, func_name) when is_integer(length) or is_atom(length) do
     timeout_regex_func(key, [trig], length, nil, func_name)
   end
 
@@ -189,13 +190,13 @@ defmodule Heisenautomod.Rules do
 
   # Supplies length
   # Supplies function
-  defmacro timeout_regex(key, trig, length, extra_function, func_name) when is_list(trig) and is_integer(length)  do
+  defmacro timeout_regex(key, trig, length, extra_function, func_name) when is_list(trig) and is_integer(length) or is_atom(length) do
     timeout_regex_func(key, trig, length, extra_function, func_name)
   end
 
   # Supplies length
   # Supplies function
-  defmacro timeout_regex(key, trig, length, extra_function, func_name) when is_integer(length)  do
+  defmacro timeout_regex(key, trig, length, extra_function, func_name) when is_integer(length) or is_atom(length)  do
     timeout_regex_func(key, [trig], length, extra_function, func_name)
   end
 
@@ -205,7 +206,7 @@ defmodule Heisenautomod.Rules do
         if Heisenautomod.Rules.check_message_regex(unquote(trig_list), var!(message), unquote(key)) do
           Volapi.Client.Sender.timeout_chat(id, nick, unquote(length), room)
 
-          execute_function(unquote(extra_function))
+          execute_function(unquote(extra_function), var!(message))
         end
       end
 
@@ -213,7 +214,7 @@ defmodule Heisenautomod.Rules do
         if Heisenautomod.Rules.check_message_regex(unquote(trig_list), var!(message), unquote(key)) do
           Volapi.Client.Sender.timeout_file(id, nick, unquote(length), room)
 
-          execute_function(unquote(extra_function))
+          execute_function(unquote(extra_function), var!(message))
         end
       end
     end
@@ -247,7 +248,7 @@ defmodule Heisenautomod.Rules do
         if Heisenautomod.Rules.check_message(unquote(trig_list), var!(message), unquote(key)) do
           Volapi.Client.Sender.ban_user(ip, unquote(options), room)
 
-          execute_function(unquote(extra_function))
+          execute_function(unquote(extra_function), var!(message))
         end
       end
     end
@@ -275,7 +276,7 @@ defmodule Heisenautomod.Rules do
         if Heisenautomod.Rules.check_message_regex(unquote(trig_list), var!(message), unquote(key)) do
           Volapi.Client.Sender.ban_user(ip, unquote(options), room)
 
-          execute_function(unquote(extra_function))
+          execute_function(unquote(extra_function), var!(message))
         end
       end
     end
@@ -303,7 +304,7 @@ defmodule Heisenautomod.Rules do
         if Heisenautomod.Rules.check_message(unquote(trig_list), var!(message), unquote(key)) do
           Volapi.Client.Sender.delete_file(file_id, room)
 
-          execute_function(unquote(extra_function))
+          execute_function(unquote(extra_function), var!(message))
         end
       end
     end
@@ -331,7 +332,7 @@ defmodule Heisenautomod.Rules do
         if Heisenautomod.Rules.check_message_regex(unquote(trig_list), var!(message), unquote(key)) do
           Volapi.Client.Sender.delete_file(file_id, room)
 
-          execute_function(unquote(extra_function))
+          execute_function(unquote(extra_function), var!(message))
         end
       end
     end
