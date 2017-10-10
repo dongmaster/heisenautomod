@@ -13,7 +13,7 @@ defmodule Heisenautomod do
   end
 
   def file_size_limit?(%{file_size: file_size}) do
-    file_size > Application.get_env(:heisenautomod, :file_size_limit, 525_000_000)
+    file_size > Application.get_env(:heisenautomod, :file_size_limit, 999_999_999_999_999)
   end
 
   def chat_banned_string?(msg) do

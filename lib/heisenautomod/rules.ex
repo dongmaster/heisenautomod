@@ -97,8 +97,8 @@ defmodule Heisenautomod.Rules do
     timeout_string(key, [trig], @default_length, extra_function, func_name)
   end
 
-  # Does not supply length
-  # Supplies function
+  # # Does not supply length
+  # # Supplies function
   defmacro timeout(key, trig, extra_function, func_name) when is_list(trig) do
     timeout_string(key, trig, @default_length, extra_function, func_name)
   end
