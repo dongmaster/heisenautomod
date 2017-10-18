@@ -73,15 +73,12 @@ defmodule Heisenautomod.Rules do
 
   def check_message_regex(trig_list, message, key) do
     Enum.any?(trig_list, fn(trig) ->
-      IO.inspect trig
-      IO.inspect Map.get(message, key)
-      IO.inspect Regex.match?(trig, Map.get(message, key))
+      Regex.match?(trig, Map.get(message, key))
     end)
   end
 
   def execute_function(func, message) when is_function(func) do
     Process.sleep(20)
-    IO.puts "hello!!!!!!!"
     func.(message)
   end
 

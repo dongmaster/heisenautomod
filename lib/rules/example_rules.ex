@@ -5,7 +5,10 @@ defmodule Heisenautomod.ExampleRules do
     func :test
   end
 
-  timeout :nick_alt, ["imdumb"], :long, fn(%{nick: nick}) -> reply "#{nick} is a pig" end, :test
+  timeout :nick_alt, ["imdumb"], :long, fn(message) ->
+    Process.sleep(400)
+    reply "#{nick} is a pig"
+  end, :test
 end
 
 
