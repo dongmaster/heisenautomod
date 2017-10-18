@@ -55,11 +55,46 @@ defmodule Heisenautomod.Rules do
   #   end
   # end
 
+  def valid_message?(%{staff: true, nick_alt: "log"}) do
+    false
+  end
+
+  def valid_message?(_) do
+    true
+  end
+
   defmacro func(fun) do
     quote do
-      match_all unquote(fun)
+      enforce {Heisenautomod.Rules, :valid_message?} do
+        match_all unquote(fun)
+      end
     end
   end
+
+  def check_message_regex(trig_list, message, key) do
+    Enum.any?(trig_list, fn(trig) ->
+      IO.inspect trig
+      IO.inspect Map.get(message, key)
+      IO.inspect Regex.match?(trig, Map.get(message, key))
+    end)
+  end
+
+  def execute_function(func, message) when is_function(func) do
+    Process.sleep(20)
+    IO.puts "hello!!!!!!!"
+    func.(message)
+  end
+
+  def execute_function(_func, _message) do
+  end
+
+  def check_message(trig_list, message, key) do
+    Enum.any?(trig_list, fn(trig) ->
+      #String.contains?(Map.get(message, key), trig)
+      Map.get(message, key) == trig
+    end)
+  end
+
 
   # defmacro timeout(:file, do: body) do
   #   quote do
@@ -131,21 +166,6 @@ defmodule Heisenautomod.Rules do
         end
       end
     end
-  end
-
-  def execute_function(func, message) when is_function(func) do
-    Process.sleep(20)
-    func.(message)
-  end
-
-  def execute_function(_func, _message) do
-  end
-
-  def check_message(trig_list, message, key) do
-    Enum.any?(trig_list, fn(trig) ->
-      #String.contains?(Map.get(message, key), trig)
-      Map.get(message, key) == trig
-    end)
   end
 
   # def timeout_string(key, [trig | t], func_name) do
@@ -220,11 +240,6 @@ defmodule Heisenautomod.Rules do
     end
   end
 
-  def check_message_regex(trig_list, message, key) do
-    Enum.any?(trig_list, fn(trig) ->
-      Regex.match?(trig, Map.get(message, key))
-    end)
-  end
 
   defmacro ban(key, trig, options, func_name) when is_list(trig) do
     ban_user(key, trig, options, nil, func_name)
