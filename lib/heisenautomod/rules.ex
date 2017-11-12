@@ -72,6 +72,7 @@ defmodule Heisenautomod.Rules do
   end
 
   def check_message_regex(trig_list, message, key) do
+    IO.inspect trig_list
     Enum.any?(trig_list, fn(trig) ->
       Regex.match?(trig, Map.get(message, key))
     end)
@@ -103,46 +104,24 @@ defmodule Heisenautomod.Rules do
 
   # Supplies length
   # Supplies function
-  defmacro timeout(key, trig, length, extra_function, func_name) when is_list(trig) and is_integer(length) or is_atom(length) do
+  defmacro timeout(key, trig, length, extra_function, func_name) when is_integer(length) or is_atom(length) do
     timeout_string(key, trig, length, extra_function, func_name)
   end
 
   # Supplies length
-  # Supplies function
-  defmacro timeout(key, trig, length, extra_function, func_name) when is_binary(trig) and is_integer(length) or is_atom(length) do
-    timeout_string(key, [trig], length, extra_function, func_name)
-  end
-
-  # Supplies length
-  defmacro timeout(key, trig, length, func_name) when is_list(trig) and is_integer(length) or is_atom(length) do
+  defmacro timeout(key, trig, length, func_name) when is_integer(length) or is_atom(length) do
     timeout_string(key, trig, length, nil, func_name)
-  end
-
-  # Supplies length
-  defmacro timeout(key, trig, length, func_name) when is_binary(trig) and is_integer(length) or is_atom(length) do
-    timeout_string(key, [trig], length, nil, func_name)
   end
 
   # Does not supply length
   # Supplies function
-  defmacro timeout(key, trig, extra_function, func_name) when is_binary(trig) do
-    timeout_string(key, [trig], @default_length, extra_function, func_name)
-  end
-
-  # # Does not supply length
-  # # Supplies function
-  defmacro timeout(key, trig, extra_function, func_name) when is_list(trig) do
+  defmacro timeout(key, trig, extra_function, func_name) do
     timeout_string(key, trig, @default_length, extra_function, func_name)
   end
 
   # Does not supply length
-  defmacro timeout(key, trig, func_name) when is_list(trig) do
+  defmacro timeout(key, trig, func_name) do
     timeout_string(key, trig, @default_length, nil, func_name)
-  end
-
-  # Does not supply length
-  defmacro timeout(key, trig, func_name) when is_binary(trig) do
-    timeout_string(key, [trig], @default_length, nil, func_name)
   end
 
   def timeout_string(key, trig_list, length, extra_function, func_name) do
@@ -177,44 +156,24 @@ defmodule Heisenautomod.Rules do
   #   timeout_string(key, t, func_name)
   # end
 
-  defmacro timeout_regex(key, trig, func_name) when is_list(trig) do
+  defmacro timeout_regex(key, trig, func_name) do
     timeout_regex_func(key, trig, @default_length, nil, func_name)
   end
 
-  defmacro timeout_regex(key, trig, func_name) do
-    timeout_regex_func(key, [trig], @default_length, nil, func_name)
-  end
-
-  defmacro timeout_regex(key, trig, length, func_name) when is_list(trig) and is_integer(length) or is_atom(length) do
-    timeout_regex_func(key, trig, length, nil, func_name)
-  end
-
   defmacro timeout_regex(key, trig, length, func_name) when is_integer(length) or is_atom(length) do
-    timeout_regex_func(key, [trig], length, nil, func_name)
-  end
-
-  # Does not supply length
-  # Supplies function
-  defmacro timeout_regex(key, trig, extra_function, func_name) when is_list(trig)  do
-    timeout_regex_func(key, trig, @default_length, extra_function, func_name)
+    timeout_regex_func(key, trig, length, nil, func_name)
   end
 
   # Does not supply length
   # Supplies function
   defmacro timeout_regex(key, trig, extra_function, func_name) do
-    timeout_regex_func(key, [trig], @default_length, extra_function, func_name)
-  end
-
-  # Supplies length
-  # Supplies function
-  defmacro timeout_regex(key, trig, length, extra_function, func_name) when is_list(trig) and is_integer(length) or is_atom(length) do
-    timeout_regex_func(key, trig, length, extra_function, func_name)
+    timeout_regex_func(key, trig, @default_length, extra_function, func_name)
   end
 
   # Supplies length
   # Supplies function
   defmacro timeout_regex(key, trig, length, extra_function, func_name) when is_integer(length) or is_atom(length)  do
-    timeout_regex_func(key, [trig], length, extra_function, func_name)
+    timeout_regex_func(key, trig, length, extra_function, func_name)
   end
 
   def timeout_regex_func(key, trig_list, length, extra_function, func_name) do
@@ -238,20 +197,12 @@ defmodule Heisenautomod.Rules do
   end
 
 
-  defmacro ban(key, trig, options, func_name) when is_list(trig) do
+  defmacro ban(key, trig, options, func_name) do
     ban_user(key, trig, options, nil, func_name)
   end
 
-  defmacro ban(key, trig, options, func_name) do
-    ban_user(key, [trig], options, nil, func_name)
-  end
-
-  defmacro ban(key, trig, options, extra_function, func_name) when is_list(trig)  do
-    ban_user(key, trig, options, extra_function, func_name)
-  end
-
   defmacro ban(key, trig, options, extra_function, func_name) do
-    ban_user(key, [trig], options, extra_function, func_name)
+    ban_user(key, trig, options, extra_function, func_name)
   end
 
   def ban_user(key, trig_list, options, extra_function, func_name) do
@@ -266,20 +217,12 @@ defmodule Heisenautomod.Rules do
     end
   end
 
-  defmacro ban_regex(key, trig, options, func_name) when is_list(trig) do
-    ban_user_regex(key, trig, options, nil, func_name)
-  end
-
   defmacro ban_regex(key, trig, options, func_name) do
     ban_user_regex(key, trig, options, nil, func_name)
   end
 
-  defmacro ban_regex(key, trig, options, extra_function, func_name) when is_list(trig) do
-    ban_user_regex(key, trig, options, extra_function, func_name)
-  end
-
   defmacro ban_regex(key, trig, options, extra_function, func_name) do
-    ban_user_regex(key, [trig], options, extra_function, func_name)
+    ban_user_regex(key, trig, options, extra_function, func_name)
   end
 
   def ban_user_regex(key, trig_list, options, extra_function, func_name) do
@@ -294,20 +237,12 @@ defmodule Heisenautomod.Rules do
     end
   end
 
-  defmacro delete(key, trig, func_name) when is_list(trig) do
+  defmacro delete(key, trig, func_name) do
     delete_file(key, trig, nil, func_name)
   end
 
-  defmacro delete(key, trig, func_name) do
-    delete_file(key, [trig], nil, func_name)
-  end
-
-  defmacro delete(key, trig, extra_function, func_name) when is_list(trig)  do
-    delete_file(key, trig, extra_function, func_name)
-  end
-
   defmacro delete(key, trig, extra_function, func_name) do
-    delete_file(key, [trig], extra_function, func_name)
+    delete_file(key, trig, extra_function, func_name)
   end
 
   def delete_file(key, trig_list, extra_function, func_name) do
@@ -322,20 +257,12 @@ defmodule Heisenautomod.Rules do
     end
   end
 
-  defmacro delete_regex(key, trig, func_name) when is_list(trig) do
+  defmacro delete_regex(key, trig, func_name) do
     delete_file_regex(key, trig, nil, func_name)
   end
 
-  defmacro delete_regex(key, trig, func_name) do
-    delete_file_regex(key, [trig], nil, func_name)
-  end
-
-  defmacro delete_regex(key, trig, extra_function, func_name) when is_list(trig) do
-    delete_file_regex(key, trig, extra_function, func_name)
-  end
-
   defmacro delete_regex(key, trig, extra_function, func_name) do
-    delete_file_regex(key, [trig], extra_function, func_name)
+    delete_file_regex(key, trig, extra_function, func_name)
   end
 
   def delete_file_regex(key, trig_list, extra_function, func_name) do
